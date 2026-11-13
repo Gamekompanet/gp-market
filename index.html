@@ -64,6 +64,7 @@ h2 span{color:var(--a1)}
 .meta{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
 .price{font-weight:700}
 .meta .btn{padding:9px 16px;font-size:14px;border-radius:10px}
+.empty{grid-column:1/-1;text-align:center;padding:60px 20px;border:1px dashed #ffffff26;border-radius:18px;color:var(--mut)}
 .btn.wait{background:#ffffff0f;color:var(--mut);cursor:default}
 .btn.wait:hover{transform:none;background:#ffffff0f}
 
@@ -157,6 +158,8 @@ cards.innerHTML=projects.map(p=>{const st=stOf(p);
  <div class="thumb" style="background:${p.color}">${p.img?`<img src="${p.img}" alt="${p.title}">`:p.title[0]}${badge}</div>
  <div class="body"><span class="type">${p.type}</span><h3>${p.title}</h3><p>${p.desc}</p>${extra}
  <div class="meta"><span class="price">${p.price}</span>${action}</div></div></div>`}).join('');
+
+if(!projects.length){cards.innerHTML='<div class="empty reveal">Скоро здесь появятся мои проекты</div>';document.getElementById('filters').style.display='none'}
 
 // обратный отсчёт до выхода
 const plural=(n,a,b,c)=>n%10===1&&n%100!==11?a:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?b:c;
