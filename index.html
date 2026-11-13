@@ -64,6 +64,26 @@ h2 span{color:var(--a1)}
 .meta{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
 .price{font-weight:700}
 .meta .btn{padding:9px 16px;font-size:14px;border-radius:10px}
+.btn.wait{background:#ffffff0f;color:var(--mut);cursor:default}
+.btn.wait:hover{transform:none;background:#ffffff0f}
+
+/* статусы: скоро / в разработке */
+.status{position:absolute;top:12px;left:12px;font:700 12px Manrope;padding:6px 10px;border-radius:8px;backdrop-filter:blur(6px);display:flex;align-items:center;gap:6px}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;animation:blink 1.4s infinite}
+.status.soon{background:#0b0b12b3;color:#f5c542}
+.status.dev{background:#0b0b12b3;color:#ff8a3d}
+@keyframes blink{50%{opacity:.25}}
+.card.upcoming .thumb img,.card.upcoming .thumb{filter:saturate(.75)}
+.countdown{margin-top:14px;padding:12px;border-radius:12px;background:#f5c54212;border:1px solid #f5c54233}
+.countdown small{color:#f5c542;font-size:12px}
+.countdown div{display:flex;gap:8px;margin-top:6px}
+.countdown b{flex:1;text-align:center;font:800 20px Unbounded;background:#0b0b12;border-radius:8px;padding:8px 0}
+.countdown em{display:block;font:500 11px Manrope;color:var(--mut);font-style:normal;margin-top:2px}
+.progress{margin-top:14px}
+.progress .bar{height:8px;border-radius:99px;background:#ffffff12;overflow:hidden}
+.progress i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#ff8a3d,#f5c542);transition:width 1.4s cubic-bezier(.2,.8,.2,1) .3s}
+.card.in .progress i{width:var(--w)}
+.progress span{display:block;font-size:12px;color:var(--mut);margin-top:6px}
 
 /* соцсети */
 .socials{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
@@ -125,10 +145,27 @@ T.innerHTML=[...T.textContent].map((ch,i)=>ch===' '?' ':`<span class="ch ${i>2?'
 
 // карточки проектов
 const cards=document.getElementById('cards');
-cards.innerHTML=projects.map(p=>`<div class="card reveal" data-type="${p.type}">
- <div class="thumb" style="background:${p.color}">${p.img?`<img src="${p.img}" alt="${p.title}">`:p.title[0]}</div>
- <div class="body"><span class="type">${p.type}</span><h3>${p.title}</h3><p>${p.desc}</p>
- <div class="meta"><span class="price">${p.price}</span><a class="btn" href="${p.url}">Открыть</a></div></div></div>`).join('');
+// если дата выхода уже наступила — проект считается вышедшим
+const stOf=p=>p.status==='soon'&&p.release&&new Date(p.release)<=new Date()?'released':(p.status||'released');
+cards.innerHTML=projects.map(p=>{const st=stOf(p);
+ const badge=st==='soon'?'<span class="status soon">Скоро выйдет</span>':st==='dev'?'<span class="status dev">В разработке</span>':'';
+ let extra='';
+ if(st==='soon'&&p.release)extra=`<div class="countdown" data-to="${p.release}"></div>`;
+ if(st==='dev')extra=`<div class="progress"><div class="bar"><i style="--w:${p.progress??0}%"></i></div><span>Готово на ${p.progress??0}%</span></div>`;
+ const action=st==='released'?`<a class="btn" href="${p.url}" target="_blank" rel="noopener">Открыть</a>`:`<span class="btn wait">${st==='soon'?'Скоро':'В работе'}</span>`;
+ return `<div class="card reveal ${st!=='released'?'upcoming':''}" data-type="${p.type}">
+ <div class="thumb" style="background:${p.color}">${p.img?`<img src="${p.img}" alt="${p.title}">`:p.title[0]}${badge}</div>
+ <div class="body"><span class="type">${p.type}</span><h3>${p.title}</h3><p>${p.desc}</p>${extra}
+ <div class="meta"><span class="price">${p.price}</span>${action}</div></div></div>`}).join('');
+
+// обратный отсчёт до выхода
+const plural=(n,a,b,c)=>n%10===1&&n%100!==11?a:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?b:c;
+function tickCountdowns(){document.querySelectorAll('.countdown').forEach(el=>{
+ let s=Math.max(0,Math.floor((new Date(el.dataset.to)-new Date())/1000));
+ if(!s){location.reload();return}
+ const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),sec=s%60;
+ el.innerHTML=`<small>До выхода</small><div>${[[d,'дн'],[h,'ч'],[m,'мин'],[sec,'сек']].map(([v,u])=>`<b>${String(v).padStart(2,'0')}<em>${u}</em></b>`).join('')}</div>`})}
+tickCountdowns();setInterval(tickCountdowns,1000);
 
 // фильтр
 const types=["Все",...new Set(projects.map(p=>p.type))];
